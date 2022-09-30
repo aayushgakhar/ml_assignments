@@ -54,51 +54,52 @@ class dataset:
         return df
 
 
-class PTA:
-    def __init__(self) -> None:
-        pass
+class Perceptron:
+    def __init__(self,n,a = 0.0001) -> None:
+        # initialize weights
+        self.n = n
+        self.a = a
+        self.w = np.zeros(n+1)
 
-    def step(z):
+
+    def step(self,z):
+        # applies step function on z
         if z >= 0:
             return 1
         else:
             return 0
 
-    def perceptron(self, df, a=0.0001, epochs=100, bias=True, plot = False):
-        X = df[['x','y']].to_numpy()
-        y = df['label'].to_numpy()
+    def fit(self, X,y,epochs=100, bias=True):
         if bias:
             X = np.hstack((np.ones((len(X),1)),X))
         else:
             X = np.hstack((np.zeros((len(X),1)),X))
-        m,n = X.shape
-        # theta
-        theta = np.zeros(n)
 
-        err_arr = []
-
+        wrong_arr = []
 
         for e in range(epochs):
-            err = 0
-            for i in range(m):
-                z = np.dot(theta,X[i])
-                y_pred = PTA.step(z)
-                err += abs(y[i] - y_pred)
-                theta = theta + a*(y[i] - y_pred)*X[i]
-            err_arr.append(err)
-        
-        if plot:
-            PTA.plot_decision_boundary(df, theta)
+            wrong = 0
+            for i in range(len(X)):
+                z = np.dot(self.w,X[i])
+                y_pred = self.step(z)
+                if y_pred != y[i]:
+                    wrong += 1
+                    self.w += self.a*(y[i] - y_pred)*X[i]
+            wrong_arr.append(wrong)
+            if(wrong == 0):
+                break
 
-        return theta, err_arr
+        return self.w, wrong_arr
 
-    def plot_decision_boundary(df, theta):
-        X = df[['x','y']].to_numpy()
+    def plot_decision_boundary(self, X,y):
 
+        df = pd.DataFrame(X, columns = ['x', 'y'])
+        df['label'] = y
         x1 = np.array([min(X[:,0]), max(X[:,0])])
-        x2 = -(theta[0] + theta[1]*x1)/theta[2]
+        x2 = -(self.w[0] + self.w[1]*x1)/self.w[2]
         plt.plot(x1,x2,'r-',label = 'Decision Boundary')
-        sns.scatterplot(data = df, x = 'x', y='y',hue = 'label')
+        sns.scatterplot(data = df, x = 'x', y='y',hue = 'label', style = 'label')
+
         plt.show()
         
 
@@ -107,6 +108,6 @@ if __name__ == "__main__":
     df = dataset(1000).get(add_noise=True)
     sns.scatterplot(data=df, x="x", y="y", hue="label")
     plt.savefig('./a.png')
-    p = PTA()
-    p.perceptron(df[['x','y']].to_numpy(),df['label'].to_numpy(),0.1,0.1)
+    p = Perceptron()
+    p.perceptron(df.drop('label', axis=1).to_numpy(),df.label.to_numpy(),epochs=100, bias=True, plot = True)
 
