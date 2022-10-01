@@ -95,8 +95,12 @@ class Perceptron:
 
         df = pd.DataFrame(X, columns = ['x', 'y'])
         df['label'] = y
-        x1 = np.array([min(X[:,0]), max(X[:,0])])
-        x2 = -(self.w[0] + self.w[1]*x1)/self.w[2]
+        if self.w[2]!=0:
+            x1 = np.array([min(X[:, 0]), max(X[:, 0])])
+            x2 = -(self.w[0] + self.w[1]*x1)/self.w[2]
+        else:
+            x2 = np.array([min(X[:, 1]), max(X[:, 1])])
+            x1 = -(self.w[0] + self.w[2]*x2)/self.w[1]
         plt.plot(x1,x2,'r-',label = 'Decision Boundary')
         sns.scatterplot(data = df, x = 'x', y='y',hue = 'label', style = 'label')
 
