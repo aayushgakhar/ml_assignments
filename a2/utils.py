@@ -55,7 +55,7 @@ class dataset:
 
 
 class Perceptron:
-    def __init__(self,n,a = 0.0001) -> None:
+    def __init__(self,n,a = 0.000001) -> None:
         # initialize weights
         self.n = n
         self.a = a
@@ -64,10 +64,7 @@ class Perceptron:
 
     def step(self,z):
         # applies step function on z
-        if z >= 0:
-            return 1
-        else:
-            return 0
+        return np.heaviside(z,1)
 
     def fit(self, X,y,epochs=100, bias=True):
         if bias:
@@ -90,6 +87,12 @@ class Perceptron:
                 break
 
         return self.w, wrong_arr
+    
+    def predict(self,X):
+        X = np.hstack((np.ones((len(X),1)),X))
+        z = np.dot(self.w,X.T)
+        y_pred = self.step(z)
+        return y_pred
 
     def plot_decision_boundary(self, X,y):
 
