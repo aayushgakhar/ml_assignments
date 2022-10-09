@@ -42,8 +42,8 @@ class dataset:
             y = y + k
 
             if add_noise:
-                x = x + np.random.normal(0,1)
-                y = y + np.random.normal(0,1)
+                x = x + np.random.normal(0,0.1)
+                y = y + np.random.normal(0,0.1)
 
             data[i][0] = x
             data[i][1] = y
