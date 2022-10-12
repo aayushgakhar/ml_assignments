@@ -9,16 +9,14 @@ class dataset:
 
     def __init__(self,n) -> None:
         self.n = n
-        self.d = {}
-        self.d[0] = (0,0,1)
-        self.d[1] = (0,3,1)
     
     def get(self,add_noise = False) -> pd.DataFrame:
         data = np.zeros((self.n,3))
+        d = {0: (0, 0, 1), 1: (0, 3, 1)}
         
         for i in range(self.n):
             l = np.random.randint(0,2)
-            h,k,r = self.d[l]
+            h,k,r = d[l]
 
             x = np.random.rand()
             y = math.sqrt(r*r - x*x)
@@ -26,29 +24,20 @@ class dataset:
             q = np.random.randint(0,4)
 
             if q == 0:
-                x = x
-                y = y
+                x,y = x,y
             elif q == 1:
-                x = -x
-                y = y
+                x,y = -x,y
             elif q == 2:
-                x = x
-                y = -y
+                x,y = x,-y
             else:
-                x = -x
-                y = -y
+                x,y = -x,-y
 
             x = x + h
             y = y + k
-
-            if add_noise:
-                x = x + np.random.normal(0,0.1)
-                y = y + np.random.normal(0,0.1)
-
-            data[i][0] = x
-            data[i][1] = y
-            data[i][2] = l
-
+            data[i] = [x,y,l]
+        
+        if add_noise:
+            data[:,0:2] += np.random.normal(0,0.1,(self.n,2))
         df = pd.DataFrame(data, columns = ['x', 'y', 'label'])
         df.label = df.label.astype(int)
         return df
@@ -67,6 +56,7 @@ class Perceptron:
         return np.heaviside(z,1)
 
     def fit(self, X,y,epochs=100, bias=True):
+        self.w = np.zeros(self.n+1)
         if bias:
             X = np.hstack((np.ones((len(X),1)),X))
         else:
@@ -94,23 +84,34 @@ class Perceptron:
         y_pred = self.step(z)
         return y_pred
 
-    def plot_decision_boundary(self, X,y):
+    def plot_decision_boundary(self, X,y, lim = False):
 
         df = pd.DataFrame(X, columns = ['x', 'y'])
         df['label'] = y
-        if self.w[2]!=0:
-            x1 = np.array([min(X[:, 0]), max(X[:, 0])])
-            x2 = -(self.w[0] + self.w[1]*x1)/self.w[2]
-        else:
-            x2 = np.array([min(X[:, 1]), max(X[:, 1])])
-            x1 = -(self.w[0] + self.w[2]*x2)/self.w[1]
+        try:
+            if self.w[2]!=0:
+                if lim:
+                    x1 = np.array([-3,3])
+                else:
+                    x1 = np.array([min(X[:, 0]), max(X[:, 0])])
+                x2 = -(self.w[0] + self.w[1]*x1)/self.w[2]
+            elif self.w[1]!=0:
+                if lim:
+                    x2 = np.array([-3, 3])
+                else:
+                    x2 = np.array([min(X[:, 1]), max(X[:, 1])])
+                x1 = -(self.w[0] + self.w[2]*x2)/self.w[1]
+            else:
+                print("NO boundary exists")
+                return
+        except:
+            print("NO boundary exists")
+            return
         plt.plot(x1,x2,'r-',label = 'Decision Boundary')
-        sns.scatterplot(data = df, x = 'x', y='y',hue = 'label', style = 'label')
-
-        plt.show()
+        sns.scatterplot(data = df, x = 'x', y='y',hue = 'label')
+        plt.axis('equal')
         
-
-
+        
 if __name__ == "__main__":
     df = dataset(1000).get(add_noise=True)
     sns.scatterplot(data=df, x="x", y="y", hue="label")
